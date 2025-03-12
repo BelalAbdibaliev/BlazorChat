@@ -13,6 +13,3 @@ services:
       - "7777:5432"
     volumes:
       - ./data/postgres:/var/lib/postgres
-
-volumes:
-  postgres_data:
