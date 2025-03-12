@@ -4,5 +4,6 @@ namespace BlazorChat.Core.Domain.Entities;
 
 public class User: IdentityUser
 {
-    
+    public int UserProfileId { get; set; }
+    public UserProfile UserProfile { get; set; }
 }
