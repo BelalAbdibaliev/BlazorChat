@@ -1,0 +1,201 @@
+﻿@page "/"
+@using BlazorChat.Core.Domain.Entities
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+
+<div class="messenger-container">
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h3>Chats</h3>
+            <button class="new-chat-btn">
+                <span class="oi oi-plus"></span>
+            </button>
+        </div>
+        <div class="search-container">
+            <input type="text" placeholder="Search" @bind="searchText" @bind:event="oninput" />
+            <span class="oi oi-magnifying-glass search-icon"></span>
+        </div>
+        <div class="chat-list">
+            @foreach (var group in FilteredGroups)
+            {
+                <div class="chat-item @(selectedGroupId == group.Id ? "active" : "")" @onclick="() => SelectGroup(group.Id)">
+                    <div class="chat-avatar">
+                        <div class="default-avatar">@group.Name[0]</div>
+                    </div>
+                    <div class="chat-info">
+                        <div class="chat-name">@group.Name</div>
+                        <div class="chat-last-message">
+                            @(group.Messages.Any() ? 
+                                (group.Messages.OrderByDescending(m => m.Date).First().Content.Length > 30 ? 
+                                    group.Messages.OrderByDescending(m => m.Date).First().Content.Substring(0, 30) + "..." : 
+                                    group.Messages.OrderByDescending(m => m.Date).First().Content) : 
+                                "No messages yet")
+                        </div>
+                    </div>
+                    <div class="chat-meta">
+                        <div class="chat-time">
+                            @(group.Messages.Any() ? 
+                                group.Messages.OrderByDescending(m => m.Date).First().Date.ToString("HH:mm") : 
+                                "")
+                        </div>
+                        @if (group.Messages.Count > 0)
+                        {
+                            <div class="chat-badge">@group.Messages.Count</div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+    <div class="main-content">
+        @if (selectedGroupId != 0)
+        {
+            var selectedGroup = Groups.FirstOrDefault(g => g.Id == selectedGroupId);
+            if (selectedGroup != null)
+            {
+                <div class="chat-header">
+                    <div class="chat-header-info">
+                        <div class="chat-avatar">
+                            <div class="default-avatar">@selectedGroup.Name[0]</div>
+                        </div>
+                        <div>
+                            <div class="chat-name">@selectedGroup.Name</div>
+                            <div class="chat-members">@selectedGroup.Members.Count members</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="messages-container" id="messagesContainer">
+                    @foreach (var message in selectedGroup.Messages.OrderBy(m => m.Date))
+                    {
+                        <div class="message-item">
+                            <div class="message-content">
+                                <div class="message-text">@message.Content</div>
+                                <div class="message-time">@message.Date.ToString("HH:mm")</div>
+                            </div>
+                        </div>
+                    }
+                </div>
+                <div class="message-input-container">
+                    <div class="message-input-wrapper">
+                        <input type="text" placeholder="Write a message..." @bind="newMessage" @bind:event="oninput" @onkeydown="HandleKeyDown" />
+                        <button class="send-btn" @onclick="SendMessage">
+                            <span class="oi oi-arrow-right"></span>
+                        </button>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="no-chat-selected">
+                <div class="no-chat-message">
+                    <span class="oi oi-chat oi-3x"></span>
+                    <h3>Select a chat to start messaging</h3>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private List<Group> Groups = new List<Group>();
+    private int selectedGroupId = 0;
+    private string searchText = "";
+    private string newMessage = "";
+
+    private List<Group> FilteredGroups => string.IsNullOrWhiteSpace(searchText) 
+        ? Groups 
+        : Groups.Where(g => g.Name.Contains(searchText, StringComparison.OrdinalIgnoreCase)).ToList();
+
+    protected override void OnInitialized()
+    {
+        // Sample data - replace with your actual data source
+        var user1 = new User { Id = 1, Username = "User1" };
+        var user2 = new User { Id = 2, Username = "User2" };
+        
+        Groups = new List<Group>
+        {
+            new Group
+            {
+                Id = 1,
+                Name = "Development Team",
+                Members = new List<User> { user1, user2 },
+                Messages = new List<Message>
+                {
+                    new Message { Id = 1, Content = "Hello team!", Date = DateTime.Now.AddHours(-2), GroupId = 1 },
+                    new Message { Id = 2, Content = "How is the project going?", Date = DateTime.Now.AddHours(-1), GroupId = 1 }
+                }
+            },
+            new Group
+            {
+                Id = 2,
+                Name = "Marketing",
+                Members = new List<User> { user1 },
+                Messages = new List<Message>
+                {
+                    new Message { Id = 3, Content = "New campaign ideas?", Date = DateTime.Now.AddDays(-1), GroupId = 2 }
+                }
+            },
+            new Group
+            {
+                Id = 3,
+                Name = "General",
+                Members = new List<User> { user1, user2 },
+                Messages = new List<Message>()
+            }
+        };
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Load the JavaScript file
+            await JSRuntime.InvokeVoidAsync("import", "/js/chat.js");
+        }
+    }
+
+    private void SelectGroup(int groupId)
+    {
+        Console.WriteLine(groupId);
+        selectedGroupId = groupId;
+        StateHasChanged();
+        
+        // Scroll to bottom of messages
+        JSRuntime.InvokeVoidAsync("scrollToBottom", "messagesContainer");
+    }
+
+    private void HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            SendMessage();
+        }
+    }
+
+    private void SendMessage()
+    {
+        if (string.IsNullOrWhiteSpace(newMessage) || selectedGroupId == 0)
+            return;
+
+        var group = Groups.FirstOrDefault(g => g.Id == selectedGroupId);
+        if (group != null)
+        {
+            var message = new Message
+            {
+                Id = group.Messages.Count > 0 ? group.Messages.Max(m => m.Id) + 1 : 1,
+                Content = newMessage,
+                Date = DateTime.Now,
+                GroupId = selectedGroupId,
+                Group = group
+            };
+
+            group.Messages.Add(message);
+            newMessage = "";
+            StateHasChanged();
+            
+            // Scroll to bottom of messages
+            JSRuntime.InvokeVoidAsync("scrollToBottom", "messagesContainer");
+        }
+    }
+}
