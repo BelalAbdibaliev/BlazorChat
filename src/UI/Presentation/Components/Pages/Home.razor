@@ -1,0 +1,73 @@
+﻿@page "/"
+@rendermode InteractiveServer
+@using BlazorChat.Core.Application.Dtos
+@using BlazorChat.Core.Application.Interfaces.Services
+@using Microsoft.AspNetCore.SignalR.Client
+@inject NavigationManager Navigation
+@inject IMessageService MessageService
+@inject ILogger<Home> Logger
+
+<h3>Чат</h3>
+
+<input @bind="message" placeholder="Введите сообщение..." />
+<button @onclick="SendMessage">Отправить</button>
+
+<ul>
+    @foreach (var msg in messages)
+    {
+        <li>@msg</li>
+    }
+</ul>
+
+@code {
+    private HubConnection? hubConnection;
+    private string message = "";
+    private List<string> messages = new();
+    private int chatId = 1; // ID чата
+    private string userId = "704148e0-cdaa-431f-b2ec-e830de3ac633"; // Имитация ID пользователя
+
+    protected override async Task OnInitializedAsync()
+    {
+        Logger.LogInformation("HOME PAGE INITIALIZED");
+        
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(Navigation.ToAbsoluteUri("/chathub"))
+            .Build();
+
+        hubConnection.On<string, string>("ReceiveMessage", (senderId, msg) =>
+        {
+            messages.Add($"{senderId}: {msg}");
+            StateHasChanged();
+        });
+
+        await hubConnection.StartAsync();
+        await hubConnection.SendAsync("JoinChat", $"chat_{chatId}");
+    }
+
+    private async Task SendMessage()
+    {
+        Logger.LogInformation("SEND BTN CLICKED");
+        
+        if (!string.IsNullOrEmpty(message))
+        {
+            var sendMessageDto = new SendMessageDto
+            {
+                SenderId = userId,
+                Content = message,
+                GroupId = chatId
+            };
+            
+            await MessageService.SendMessageAsync(sendMessageDto);
+            message = "";
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (hubConnection is not null)
+        {
+            await hubConnection.SendAsync("LeaveChat", $"chat_{chatId}");
+            await hubConnection.DisposeAsync();
+        }
+    }
+}
