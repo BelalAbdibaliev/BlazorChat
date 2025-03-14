@@ -1,4 +1,9 @@
+using BlazorChat.Core.Application.Extensions;
+using BlazorChat.Core.Application.Hubs;
+using BlazorChat.Core.Domain.Entities;
+using BlazorChat.Core.Infrastructure.DataAccess;
 using BlazorChat.Core.Infrastructure.Extensions;
+using Microsoft.AspNetCore.Identity;
 using Presentation.Components;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -8,6 +13,7 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddApplicationServices(builder.Configuration);
 
 var app = builder.Build();
 
@@ -19,13 +25,18 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+await app.Services.SeedUsers();
+await app.Services.SeedGroups();
 
+await app.Services.SeedGroups();
+app.UseHttpsRedirection();
 
 app.UseAntiforgery();
 
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
+
+app.MapHub<ChatHub>("/chathub");
 
 app.Run();
