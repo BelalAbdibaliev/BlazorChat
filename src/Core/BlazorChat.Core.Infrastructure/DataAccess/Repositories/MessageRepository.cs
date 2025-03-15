@@ -12,8 +12,8 @@ public class MessageRepository: IMessageRepository
         _dbContext = dbContext;
     }
 
-    public async Task Add(Message message)
+    public async Task AddAsync(GroupMessage groupMessage)
     {
-        await _dbContext.Messages.AddAsync(message);
+        await _dbContext.GroupMessages.AddAsync(groupMessage);
     }
 }
