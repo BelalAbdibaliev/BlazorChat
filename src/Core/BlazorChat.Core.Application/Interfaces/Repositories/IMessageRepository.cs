@@ -4,5 +4,6 @@ namespace BlazorChat.Core.Application.Interfaces.Repositories;
 
 public interface IMessageRepository
 {
-    Task AddAsync(GroupMessage groupMessage);
+    Task AddAsync<T>(T message, CancellationToken cancellationToken = default)
+        where T : class;
 }

@@ -12,8 +12,9 @@ public class MessageRepository: IMessageRepository
         _dbContext = dbContext;
     }
 
-    public async Task AddAsync(GroupMessage groupMessage)
+    public async Task AddAsync<T>(T message, CancellationToken cancellationToken = default)
+        where T : class
     {
-        await _dbContext.GroupMessages.AddAsync(groupMessage);
+        await _dbContext.AddAsync(message);
     }
 }
