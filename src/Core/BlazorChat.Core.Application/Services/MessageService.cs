@@ -3,6 +3,7 @@ using BlazorChat.Core.Application.Hubs;
 using BlazorChat.Core.Application.Interfaces;
 using BlazorChat.Core.Application.Interfaces.Services;
 using BlazorChat.Core.Domain.Entities;
+using BlazorChat.Core.Domain.Enums;
 using Microsoft.AspNetCore.SignalR;
 
 namespace BlazorChat.Core.Application.Services;
@@ -10,60 +11,34 @@ namespace BlazorChat.Core.Application.Services;
 public class MessageService: IMessageService
 {
     private readonly IUnitOfWork _unitOfWork;
-    private readonly IHubContext<ChatHub> _hubContext;
+    private readonly IHubContext<GroupChatHub> _hubContext;
 
-    public MessageService(IUnitOfWork unitOfWork, IHubContext<ChatHub> hubContext)
+    public MessageService(IUnitOfWork unitOfWork, IHubContext<GroupChatHub> hubContext)
     {
         _unitOfWork = unitOfWork;
         _hubContext = hubContext;
     }
 
-    public async Task<MessageDto> SendMessageAsync(SendMessageDto messageDto)
+    public async Task SendGroupMessageAsync(SendGroupMessageDto groupMessageDto)
     {
-        Message message = new Message();
-        
-        if (messageDto.ChatId == null && messageDto.GroupId == null)
+        if (groupMessageDto.GroupChatId == null)
             throw new ArgumentException("Сообщение должно принадлежать либо чату, либо группе.");
 
-        if (messageDto.ChatId != null && messageDto.GroupId != null)
-            throw new ArgumentException("Сообщение не может принадлежать одновременно и чату, и группе.");
+        if (!Enum.IsDefined(typeof(ChatType), groupMessageDto.ChatType))
+            throw new ArgumentException("Некорректный тип чата.");
 
-        if (messageDto.ChatId != null && messageDto.GroupId == null)
+        GroupMessage groupMessage = new GroupMessage
         {
-            message = new Message
-            {
-                SenderId = messageDto.SenderId,
-                Content = messageDto.Content,
-                Date = DateTime.UtcNow,
-                ChatId = messageDto.ChatId,
-            };
-        }
+            SenderId = groupMessageDto.SenderId,
+            Content = groupMessageDto.Content,
+            Date = DateTime.UtcNow,
+            GroupChatId = groupMessageDto.GroupChatId,
+        };
 
-        if (messageDto.ChatId is null && messageDto.GroupId is not null)
-        {
-            message = new Message
-            {
-                SenderId = messageDto.SenderId,
-                Content = messageDto.Content,
-                Date = DateTime.UtcNow,
-                GroupId = messageDto.GroupId,
-            };
-        }
-
-        await _unitOfWork.Messages.Add(message);
+        await _unitOfWork.Messages.AddAsync(groupMessage);
         await _unitOfWork.SaveChangesAsync();
 
-        string groupName = messageDto.ChatId != null ? $"chat_{messageDto.ChatId}" : $"group_{messageDto.GroupId}";
-        await _hubContext.Clients.Group(groupName).SendAsync("ReceiveMessage", messageDto.SenderId, messageDto.Content);
-
-        return new MessageDto
-        {
-            Id = message.Id,
-            SenderId = message.SenderId,
-            Content = message.Content,
-            Date = message.Date,
-            ChatId = message.ChatId,
-            GroupId = message.GroupId
-        };
+        await _hubContext.Clients.Group($"chat_{groupMessageDto.GroupChatId}").SendAsync("ReceiveMessage", groupMessageDto.SenderId, groupMessageDto.Content);
     }
+
 }

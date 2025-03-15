@@ -5,6 +5,6 @@ namespace BlazorChat.Core.Application.Interfaces.Services;
 
 public interface IMessageService
 {
-    Task<MessageDto> SendMessageAsync(SendMessageDto messageDto);
+    Task SendGroupMessageAsync(SendGroupMessageDto groupMessageDto);
     
 }
