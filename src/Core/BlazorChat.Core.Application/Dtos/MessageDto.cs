@@ -13,8 +13,8 @@ public class MessageDto
     public User Sender { get; set; }
 
     public int? GroupId { get; set; }
-    public Group? Group { get; set; }
+    public GroupChat? Group { get; set; }
 
     public int? ChatId { get; set; }
-    public Chat? Chat { get; set; }
+    public PrivateChat? Chat { get; set; }
 }
