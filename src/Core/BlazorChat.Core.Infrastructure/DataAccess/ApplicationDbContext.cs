@@ -6,64 +6,66 @@ namespace BlazorChat.Core.Infrastructure.DataAccess;
 
 public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options): IdentityDbContext<User>(options)
 {
-    public DbSet<Chat> Chats { get; set; }
-    public DbSet<Message> Messages { get; set; }
-    public DbSet<Group> Groups { get; set; }
+    public DbSet<PrivateChat> PrivateChats { get; set; }
+    public DbSet<PrivateMessage> PrivateMessages { get; set; }
+    public DbSet<GroupChat> GroupChats { get; set; }
+    public DbSet<GroupMessage> GroupMessages { get; set; }
     public DbSet<User> Users { get; set; }
     public DbSet<UserProfile> UserProfiles { get; set; }
-    public DbSet<GroupUser> GroupUsers { get; set; }
-    public DbSet<GroupAdmin> GroupAdmins { get; set; }
+    public DbSet<GroupChatUser> GroupUsers { get; set; }
+    public DbSet<GroupChatAdmin> GroupAdmins { get; set; }
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
 
-        modelBuilder.Entity<GroupUser>()
-            .HasKey(gu => new { gu.GroupId, gu.UserId });
+        modelBuilder.Entity<GroupChatUser>()
+            .HasKey(gu => new { gu.GroupChatId, gu.UserId });
 
-        modelBuilder.Entity<GroupUser>()
-            .HasOne(gu => gu.Group)
+        modelBuilder.Entity<GroupChatUser>()
+            .HasOne(gu => gu.GroupChat)
             .WithMany(g => g.Members)
-            .HasForeignKey(gu => gu.GroupId)
+            .HasForeignKey(gu => gu.GroupChatId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        modelBuilder.Entity<GroupUser>()
+        modelBuilder.Entity<GroupChatUser>()
             .HasOne(gu => gu.User)
             .WithMany(u => u.Groups)
             .HasForeignKey(gu => gu.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        modelBuilder.Entity<GroupAdmin>()
-            .HasKey(ga => new { ga.GroupId, ga.UserId });
+        modelBuilder.Entity<GroupChatAdmin>()
+            .HasKey(ga => new { GroupId = ga.GroupChatId, ga.UserId });
 
-        modelBuilder.Entity<GroupAdmin>()
-            .HasOne(ga => ga.Group)
+        modelBuilder.Entity<GroupChatAdmin>()
+            .HasOne(ga => ga.GroupChat)
             .WithMany(g => g.Admins)
-            .HasForeignKey(ga => ga.GroupId)
+            .HasForeignKey(ga => ga.GroupChatId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        modelBuilder.Entity<GroupAdmin>()
+        modelBuilder.Entity<GroupChatAdmin>()
             .HasOne(ga => ga.User)
             .WithMany()
             .HasForeignKey(ga => ga.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        modelBuilder.Entity<Message>()
-            .HasOne(m => m.Group)
+        modelBuilder.Entity<PrivateMessage>()
+            .HasOne(m => m.PrivateChat)
             .WithMany()
-            .HasForeignKey(m => m.GroupId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        modelBuilder.Entity<Message>()
-            .HasOne(m => m.Chat)
-            .WithMany()
-            .HasForeignKey(m => m.ChatId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        modelBuilder.Entity<Message>()
+            .HasForeignKey(m => m.PrivateChatId)
+            .HasPrincipalKey(c => c.Id)
+            .OnDelete(DeleteBehavior.Restrict);
+        
+        modelBuilder.Entity<GroupMessage>()
             .HasOne(m => m.Sender)
             .WithMany()
             .HasForeignKey(m => m.SenderId)
+            .OnDelete(DeleteBehavior.Restrict);
+        
+        modelBuilder.Entity<GroupMessage>()
+            .HasOne(m => m.GroupChat)
+            .WithMany()
+            .HasForeignKey(m => m.GroupChatId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }
