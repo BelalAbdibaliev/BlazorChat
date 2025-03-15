@@ -46,28 +46,28 @@ public static class DataSeed
         using var scope = serviceProvider.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         
-        if(dbContext.Groups.Any())
+        if(dbContext.GroupChats.Any())
             return;
         
         var user1 = await dbContext.Users.FirstOrDefaultAsync(x => x.Email == "sunday@admin.com");
         var user2 = await dbContext.Users.FirstOrDefaultAsync(x => x.Email == "flacko@admin.com");
 
-        await dbContext.Groups.AddAsync(new Group
+        await dbContext.GroupChats.AddAsync(new GroupChat
         {
             Name = "Group1",
         });
         await dbContext.SaveChangesAsync();
-        var group = dbContext.Groups.FirstOrDefault();
+        var group = dbContext.GroupChats.FirstOrDefault();
         
-        await dbContext.GroupUsers.AddAsync(new GroupUser
+        await dbContext.GroupUsers.AddAsync(new GroupChatUser
         {
-            GroupId = group.Id,
+            GroupChatId = group.Id,
             UserId = user1.Id,
             Joined = DateTime.UtcNow,
         });
-        await dbContext.GroupUsers.AddAsync(new GroupUser
+        await dbContext.GroupUsers.AddAsync(new GroupChatUser
         {
-            GroupId = group.Id,
+            GroupChatId = group.Id,
             UserId = user2.Id,
             Joined = DateTime.UtcNow,
         });
