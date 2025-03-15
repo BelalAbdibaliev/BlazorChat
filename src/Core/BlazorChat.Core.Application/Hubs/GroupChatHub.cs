@@ -7,17 +7,11 @@ public class GroupChatHub: Hub
 {
     public async Task SendMessage(SendGroupMessageDto groupMessage)
     {
-        if (groupMessage.GroupChatId == null && groupMessage.GroupChatId == null)
-            throw new ArgumentException("Сообщение должно принадлежать либо чату, либо группе.");
+        if (groupMessage.GroupChatId is 0)
+            throw new ArgumentException("Group ID can't be zero");
 
-        string groupName = groupMessage.GroupChatId != null ? $"chat_{groupMessage.GroupChatId}" : $"group_{groupMessage.GroupChatId}";
-
+        string groupName = $"group_{groupMessage.GroupChatId}";
         await Clients.Group(groupName).SendAsync("ReceiveMessage", groupMessage.SenderId, groupMessage.Content);
-    }
-
-    public async Task JoinChat(int chatId)
-    {
-        await Groups.AddToGroupAsync(Context.ConnectionId, $"chat_{chatId}");
     }
 
     public async Task JoinGroup(int groupId)
