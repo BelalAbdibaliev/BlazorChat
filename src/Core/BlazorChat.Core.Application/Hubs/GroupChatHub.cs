@@ -3,16 +3,16 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace BlazorChat.Core.Application.Hubs;
 
-public class ChatHub: Hub
+public class GroupChatHub: Hub
 {
-    public async Task SendMessage(SendMessageDto message)
+    public async Task SendMessage(SendGroupMessageDto groupMessage)
     {
-        if (message.ChatId == null && message.GroupId == null)
+        if (groupMessage.GroupChatId == null && groupMessage.GroupChatId == null)
             throw new ArgumentException("Сообщение должно принадлежать либо чату, либо группе.");
 
-        string groupName = message.ChatId != null ? $"chat_{message.ChatId}" : $"group_{message.GroupId}";
+        string groupName = groupMessage.GroupChatId != null ? $"chat_{groupMessage.GroupChatId}" : $"group_{groupMessage.GroupChatId}";
 
-        await Clients.Group(groupName).SendAsync("ReceiveMessage", message.SenderId, message.Content);
+        await Clients.Group(groupName).SendAsync("ReceiveMessage", groupMessage.SenderId, groupMessage.Content);
     }
 
     public async Task JoinChat(int chatId)
