@@ -37,6 +37,6 @@ app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
-app.MapHub<ChatHub>("/chathub");
+app.MapHub<GroupChatHub>("/chathub");
 
 app.Run();

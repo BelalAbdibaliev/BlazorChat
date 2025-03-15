@@ -1,6 +1,4 @@
-﻿using BlazorChat.Core.Domain.Enums;
-
-namespace BlazorChat.Core.Domain.Entities;
+﻿namespace BlazorChat.Core.Domain.Entities;
 public class PrivateMessage
 {
     public int Id { get; set; }

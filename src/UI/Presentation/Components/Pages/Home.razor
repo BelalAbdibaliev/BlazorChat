@@ -23,8 +23,8 @@
     private HubConnection? hubConnection;
     private string message = "";
     private List<string> messages = new();
-    private int chatId = 1; // ID чата
-    private string userId = "704148e0-cdaa-431f-b2ec-e830de3ac633"; // Имитация ID пользователя
+    private int chatId = 1;
+    private string userId = "2d488264-80b1-45f4-9476-feb21ffbf781"; // Имитация ID пользователя
 
     protected override async Task OnInitializedAsync()
     {
@@ -50,14 +50,14 @@
         
         if (!string.IsNullOrEmpty(message))
         {
-            var sendMessageDto = new SendMessageDto
+            var sendMessageDto = new SendGroupMessageDto
             {
                 SenderId = userId,
                 Content = message,
-                GroupId = chatId
+                GroupChatId = chatId,
             };
             
-            await MessageService.SendMessageAsync(sendMessageDto);
+            await MessageService.SendGroupMessageAsync(sendMessageDto);
             message = "";
         }
     }

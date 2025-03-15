@@ -3,7 +3,6 @@ using BlazorChat.Core.Application.Hubs;
 using BlazorChat.Core.Application.Interfaces;
 using BlazorChat.Core.Application.Interfaces.Services;
 using BlazorChat.Core.Domain.Entities;
-using BlazorChat.Core.Domain.Enums;
 using Microsoft.AspNetCore.SignalR;
 
 namespace BlazorChat.Core.Application.Services;
@@ -23,9 +22,6 @@ public class MessageService: IMessageService
     {
         if (groupMessageDto.GroupChatId == null)
             throw new ArgumentException("Сообщение должно принадлежать либо чату, либо группе.");
-
-        if (!Enum.IsDefined(typeof(ChatType), groupMessageDto.ChatType))
-            throw new ArgumentException("Некорректный тип чата.");
 
         GroupMessage groupMessage = new GroupMessage
         {
