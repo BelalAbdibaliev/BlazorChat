@@ -2,15 +2,14 @@
 
 namespace BlazorChat.Core.Domain.Entities;
 
-public class GroupAdmin
+public class GroupChatUser
 {
-    public int GroupId { get; set; }
-    public Group Group { get; set; }
+    public int GroupChatId { get; set; }
+    public GroupChat GroupChat { get; set; }
     
     [ForeignKey(nameof(User))]
     public string UserId { get; set; }
     public User User { get; set; }
     
-    public string Role { get; set; } = "Admin";
-    //Privilege will be displayed bellow
+    public DateTime Joined { get; set; }
 }

@@ -1,6 +1,6 @@
 ﻿namespace BlazorChat.Core.Domain.Entities;
 
-public class Chat
+public class PrivateChat
 {
     public int Id { get; set; }
     
